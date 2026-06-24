@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할 일 관리 앱</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFB6D9 0%, #FFB3B3 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        #todoInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        #todoInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        .todo-list {
+            list-style: none;
+        }
+        
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .todo-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .todo-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .delete-btn {
+            padding: 8px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 할 일 관리</h1>
+        
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="todoInput" 
+                placeholder="할 일을 입력해주세요..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button onclick="addTodo()">추가</button>
+        </div>
+        
+        <ul class="todo-list" id="todoList"></ul>
+        <div class="empty-message" id="emptyMessage">
+            할 일을 추가해보세요!
+        </div>
+    </div>
+
+    <script>
+        // 페이지가 로드될 때 저장된 할 일 불러오기
+        function loadTodos() {
+            // localStorage에서 savedTodos라는 이름으로 저장된 데이터를 가져옵니다
+            const savedTodos = localStorage.getItem('savedTodos');
+            
+            // 저장된 데이터가 있으면 JSON 형식을 다시 배열로 변환
+            if (savedTodos) {
+                return JSON.parse(savedTodos);
+            }
+            // 저장된 데이터가 없으면 빈 배열 반환
+            return [];
+        }
+        
+        // 할 일 목록을 localStorage에 저장하기
+        function saveTodos(todos) {
+            // 배열을 JSON 형식의 문자열로 변환해서 저장
+            localStorage.setItem('savedTodos', JSON.stringify(todos));
+        }
+        
+        // 할 일 목록을 화면에 표시하기
+        function displayTodos() {
+            // localStorage에서 할 일 목록을 가져옵니다
+            const todos = loadTodos();
+            const todoList = document.getElementById('todoList');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            // 목록을 비웁니다 (새로 그리기 위해)
+            todoList.innerHTML = '';
+            
+            // 할 일이 없으면 안내 메시지 보이기
+            if (todos.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            // 안내 메시지 숨기기
+            emptyMessage.style.display = 'none';
+            
+            // 각 할 일을 화면에 표시
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+                
+                // 완료된 할 일이면 'completed' 클래스 추가
+                if (todo.completed) {
+                    li.classList.add('completed');
+                }
+                
+                // HTML 구조 만들기
+                li.innerHTML = `
+                    <input 
+                        type="checkbox" 
+                        class="checkbox"
+                        ${todo.completed ? 'checked' : ''}
+                        onchange="toggleTodo(${index})"
+                    >
+                    <span class="todo-text">${todo.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${index})">
+                        삭제
+                    </button>
+                `;
+                
+                todoList.appendChild(li);
+            });
+        }
+        
+        // 할 일 추가하기
+        function addTodo() {
+            // 입력 필드에서 텍스트 가져오기
+            const todoInput = document.getElementById('todoInput');
+            const todoText = todoInput.value.trim();
+            
+            // 입력한 내용이 비어있는지 확인
+            if (todoText === '') {
+                alert('할 일을 입력해주세요!');
+                return;
+            }
+            
+            // localStorage에서 할 일 목록 가져오기
+            const todos = loadTodos();
+            
+            // 새로운 할 일 객체 만들기
+            const newTodo = {
+                text: todoText,
+                completed: false
+            };
+            
+            // 목록에 새로운 할 일 추가
+            todos.push(newTodo);
+            
+            // 업데이트된 목록을 localStorage에 저장
+            saveTodos(todos);
+            
+            // 입력 필드 비우기
+            todoInput.value = '';
+            
+            // 화면에 업데이트된 할 일 목록 표시
+            displayTodos();
+            
+            // 입력 필드에 포커스 맞추기
+            todoInput.focus();
+        }
+        
+        // 할 일 완료 표시 토글하기
+        function toggleTodo(index) {
+            // localStorage에서 할 일 목록 가져오기
+            const todos = loadTodos();
+            
+            // 해당 할 일의 완료 상태 반대로 변경
+            todos[index].completed = !todos[index].completed;
+            
+            // 업데이트된 목록을 localStorage에 저장
+            saveTodos(todos);
+            
+            // 화면에 업데이트된 할 일 목록 표시
+            displayTodos();
+        }
+        
+        // 할 일 삭제하기
+        function deleteTodo(index) {
+            // localStorage에서 할 일 목록 가져오기
+            const todos = loadTodos();
+            
+            // 해당 인덱스의 할 일을 목록에서 제거
+            todos.splice(index, 1);
+            
+            // 업데이트된 목록을 localStorage에 저장
+            saveTodos(todos);
+            
+            // 화면에 업데이트된 할 일 목록 표시
+            displayTodos();
+        }
+        
+        // 입력 필드에서 엔터 키를 누르면 할 일 추가하기
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+        
+        // 페이지가 로드될 때 저장된 할 일 표시하기
+        displayTodos();
+    </script>
+</body>
+</html>

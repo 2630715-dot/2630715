@@ -16,5 +16,5 @@ HTML,CSS,JavaScript 를 하나의 index.html 파일에 넣어서 할 일 관리 
 어려웠던 점은 전혀 없었고 AI 하나만으로도 손쉽게 앱 하나를 만들 수 있는 것이 신기했습니다. 약간 여러방면에서 자주 사용햐보고 싶습니다.
 
 ## 6. 제출링크
-GitHub Repository 주소: 
+GitHub Repository 주소: https://github.com/2630715-dot/2630715
 실행화면주소: https://zrr.kr/j0VIS2
